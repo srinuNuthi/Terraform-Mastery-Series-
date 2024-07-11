@@ -8,42 +8,19 @@ terraform {
 }
 
 provider "aws" {
-  region = "us-west-1"
+  region = var.region
 }
 
-# Creating a VPC with CIDR block 10.0.0.0/16
-resource "aws_vpc" "trailvpc" {
-  cidr_block = "10.0.0.0/16"
+resource "aws_vpc" "main" {
+  cidr_block = var.vpc_cidr
 }
 
-# Creating four subnets within the VPC with hardcoded CIDR blocks
-resource "aws_subnet" "subnet1" {
-  vpc_id     = aws_vpc.trailvpc.id
-  cidr_block = "10.0.1.0/24"
+resource "aws_subnet" "dynamic_subnets" {
+  count      = 4
+  vpc_id     = aws_vpc.main.id
+  cidr_block = cidrsubnet(var.vpc_cidr, 8, count.index)
   tags = {
-    Name = "subnet-1"
+    Name = "subnet-${count.index + 1}"
   }
-  depends_on = [aws_vpc.trailvpc] # Ensures the VPC is created first
+  depends_on = [aws_vpc.main] # Ensures the VPC is created first
 }
-
-resource "aws_subnet" "subnet2" {
-  vpc_id     = aws_vpc.trailvpc.id
-  cidr_block = "10.0.2.0/24"
-  tags = {
-    Name = "subnet-2"
-  }
-  depends_on = [aws_vpc.trailvpc] # Ensures the VPC is created first
-}
-
-resource "aws_subnet" "subnet3" {
-  vpc_id     = aws_vpc.trailvpc.id
-  cidr_block = "10.0.3.0/24"
-  tags = {
-    Name = "subnet-3"
-  }
-  depends_on = [aws_vpc.trailvpc] # Ensures the VPC is created first
-}
-
-resource "aws_subnet" "subnet4" {
-  vpc_id     = aws_vpc.trailvpc.id
-  cidr_block = "10.0.4.0
